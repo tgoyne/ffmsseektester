@@ -2,6 +2,7 @@
 
 #include "audio_tester.h"
 #include "format.h"
+#include "test_result.h"
 
 #include "ffms.h"
 
@@ -99,25 +100,33 @@ size_t audio_tester::test(int err_code, int iterations, size_t start_sample) {
 	throw error(err_code, format("(%1%) asked for %2%, got garbage") % iterations % start_sample);
 }
 
-string run_audio_test(fs::path const& test_file) {
-	audio_tester tester(test_file);
+test_result run_audio_test(fs::path const& test_file) {
+	try {
+		audio_tester tester(test_file);
 
-	// verify that there is no unnecessary and broken seeking going on
-	// all files that can be indexed should pass this
-	for (size_t start_sample = 0;
-		start_sample < tester.num_samples;
-		start_sample += tester.test(ERR_INITIAL_DECODE, 0, start_sample)) ;
+		// verify that there is no unnecessary and broken seeking going on
+		// all files that can be indexed should pass this
+		for (size_t start_sample = 0;
+			start_sample < tester.num_samples;
+			start_sample += tester.test(ERR_INITIAL_DECODE, 0, start_sample)) ;
 
-	// try seeking to beginning and decoding again; if this fails seeking
-	// is probably completely broken
-	for (size_t start_sample = 0;
-		start_sample < tester.num_samples;
-		start_sample += tester.test(ERR_SEEK, -1, start_sample)) ;
+		// try seeking to beginning and decoding again; if this fails seeking
+		// is probably completely broken
+		for (size_t start_sample = 0;
+			start_sample < tester.num_samples;
+			start_sample += tester.test(ERR_SEEK, -1, start_sample)) ;
 
-	// test random seeking
-	for (int iterations = 0; iterations < 10000; ++iterations) {
-		tester.test(ERR_SEEK, iterations, (rand() * RAND_MAX + rand()) % tester.num_samples);
+		// test random seeking
+		for (int iterations = 0; iterations < 10000; ++iterations) {
+			tester.test(ERR_SEEK, iterations, (rand() * RAND_MAX + rand()) % tester.num_samples);
+		}
 	}
-	return "";
+	catch (error const& e) {
+		return test_result(e.type, test_file, e.what());
+	}
+	catch (exception const& e) {
+		return test_result(ERR_UNKNOWN, test_file, e.what());
+	}
+	return test_result(test_file);
 }
 

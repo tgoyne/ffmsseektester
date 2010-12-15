@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+struct test_result;
 class error : public exception {
 	string msg;
 public:
@@ -9,15 +10,4 @@ public:
 	const char *what() const { return msg.c_str(); }
 };
 
-enum ERROR_TYPE {
-	ERR_SUCCESS = 0,
-	ERR_UNKNOWN,
-	ERR_CRASH,
-	ERR_INDEXER,
-	ERR_INDEX,
-	ERR_NO_AUDIO,
-	ERR_INITIAL_DECODE,
-	ERR_SEEK
-};
-
-string run_audio_test(fs::path const& path);
+test_result run_audio_test(fs::path const& path);

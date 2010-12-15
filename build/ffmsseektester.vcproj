@@ -201,6 +201,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\src\test_result.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\test_runner.cpp"
 				>
 			</File>
@@ -218,6 +222,10 @@
 			</File>
 			<File
 				RelativePath="..\src\pre.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\test_result.h"
 				>
 			</File>
 			<File

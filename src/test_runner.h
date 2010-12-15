@@ -6,7 +6,7 @@ class test_runner {
 	bool verbose;
 	bool spawn_children;
 	fs::path log_path;
-	b::function<string (fs::path)> test_function;
+	b::function<test_result (fs::path)> test_function;
 
 	void check_regression(int expected_err_code, string const& file_path);
 public:
@@ -21,5 +21,5 @@ class test_spawner {
 	bool disable_haali;
 public:
 	test_spawner(fs::path self, bool disable_haali) : self(self), disable_haali(disable_haali) { }
-	string operator()(fs::path path);
+	test_result operator()(fs::path path);
 };

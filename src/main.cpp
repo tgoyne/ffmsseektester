@@ -2,6 +2,7 @@
 
 #include "audio_tester.h"
 #include "test_runner.h"
+#include "test_result.h"
 
 #include "ffms.h"
 
@@ -47,7 +48,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 	bool disable_haali = !!vm.count("disable-haali");
 	bool spawn_children = !!vm.count("spawn-children");
 
-	b::function<string (fs::path)> test_function;
+	b::function<test_result (fs::path)> test_function;
 	if (!spawn_children) {
 		test_function = run_audio_test;
 	}

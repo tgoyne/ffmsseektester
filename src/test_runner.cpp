@@ -3,10 +3,11 @@
 #include "audio_tester.h"
 #include "format.h"
 #include "test_runner.h"
+#include "test_result.h"
 
 #include "ffms.h"
 
-string test_spawner::operator()(fs::path path) {
+test_result test_spawner::operator()(fs::path path) {
 	vector<string> args;
 	args.push_back("--log=-");
 	args.push_back(b::erase_all_copy(path.string(), "\""));
@@ -87,7 +88,7 @@ void test_runner::run_test(fs::path path) {
 	}
 	if (!fs::is_regular_file(path)) return;
 
-	cout << test_function(path) << endl;
+	test_result result = test_function(path);
 	/*(*verbose) << path << ": ";
 	try {
 		test(path);
