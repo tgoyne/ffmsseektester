@@ -24,18 +24,12 @@ test_result test_spawner::operator()(fs::path path) {
 
 
 test_runner::test_runner(bool verbose, bool spawn_children, string log_path, b::function<test_result (fs::path)> test_function)
-: verbose(verbose)
+: log(0)
+, verbose(verbose)
 , spawn_children(spawn_children)
 , log_path(log_path)
 , test_function(test_function)
 {
-	if (log_path == "-") {
-		log = &cout;
-	}
-	else {
-		log_out_file.open(log_path);
-		log = &log_out_file;
-	}
 }
 
 
@@ -50,7 +44,8 @@ void test_runner::run_regression() {
 	while (!log_file.eof() && log_file.good()) {
 		string line;
 		getline(log_file, line);
-		files.push_back(line);
+		if (!line.empty())
+			files.push_back(line);
 	}
 
 	if (spawn_children) {
@@ -91,6 +86,15 @@ void test_runner::run_test(fs::path path) {
 			cerr << "passed" << endl;
 		else
 			cerr << result.msg << endl;
+	}
+	if (!log) {
+		if (log_path == "-") {
+			log = &cout;
+		}
+		else {
+			log_out_file.open(log_path);
+			log = &log_out_file;
+		}
 	}
 	(*log) << (string)result << endl;
 }
