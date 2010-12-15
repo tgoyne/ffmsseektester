@@ -19,7 +19,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 	opt.add_options()
 		("help", "")
 		("verbose,v", "")
-		("log", po::value<string>(), "")
+		("log", po::value<string>()->default_value(""), "")
 		("run-regression-test", "")
 		("spawn-children", "spawn child processes for each test to better handle crashes")
 		("disable-haali", "don't use Haali's splitters even if ffms2 was built with them")
