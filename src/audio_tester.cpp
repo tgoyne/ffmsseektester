@@ -30,17 +30,17 @@ int FFMS_CC dump_file_name(const char *source_file, int, const FFMS_AudioPropert
 
 static FFMS_AudioSource *init_ffms(fs::path const& file) {
 	string sfile = file.string();
-	FFMS_Indexer *indexer = FFMS_CreateIndexer(sfile.c_str(), NULL);
+	FFMS_Indexer *indexer = FFMS_CreateIndexer(sfile.c_str(), 0);
 	if (!indexer) throw error(ERR_INDEXER, "failed to create indexer; file is not in a supported format");
 
 	bool first = true;
-	b::shared_ptr<FFMS_Index> index(FFMS_DoIndexing(indexer, -1, -1, dump_file_name, &first, FFMS_IEH_IGNORE, NULL, NULL, NULL), FFMS_DestroyIndex);
+	b::shared_ptr<FFMS_Index> index(FFMS_DoIndexing(indexer, -1, -1, dump_file_name, &first, FFMS_IEH_IGNORE, 0, 0, 0), FFMS_DestroyIndex);
 	if (!index) throw error(ERR_INDEX, "failed to create index");
 
-	int track = FFMS_GetFirstTrackOfType(index.get(), FFMS_TYPE_AUDIO, NULL);
+	int track = FFMS_GetFirstTrackOfType(index.get(), FFMS_TYPE_AUDIO, 0);
 	if (track == -1) throw error(ERR_NO_AUDIO, "no audio tracks found");
 
-	return FFMS_CreateAudioSource(sfile.c_str(), track, index.get(), NULL);
+	return FFMS_CreateAudioSource(sfile.c_str(), track, index.get(), 0);
 }
 
 class audio_tester {
@@ -82,7 +82,7 @@ size_t audio_tester::test(int err_code, int iterations, size_t start_sample) {
 
 	size_t sample_count = min((sizeof(decode_buffer) - 100) / bytes_per_sample, size_t(num_samples - start_sample));
 
-	if (FFMS_GetAudio(audio_source, decode_buffer, start_sample, sample_count, NULL))
+	if (FFMS_GetAudio(audio_source, decode_buffer, start_sample, sample_count, 0))
 		throw error(err_code, format("(%1%) %2%-%3% decode failed") % iterations % start_sample % sample_count);
 	if (memcmp(zero_buffer, decode_buffer + 15000, 100))
 		throw error(err_code, format("(%1%) %2%-%3% overflow") % iterations % start_sample % sample_count);

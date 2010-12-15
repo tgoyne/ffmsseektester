@@ -67,7 +67,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 	SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
 #endif
 	if (!disable_haali)
-		CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+		CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 #endif
 
 	FFMS_Init(0, true);
