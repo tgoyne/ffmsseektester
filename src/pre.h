@@ -9,6 +9,7 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include <boost/function.hpp>
 #include <boost/process.hpp>
 #include <boost/program_options.hpp>
 #include <boost/range/adaptors.hpp>

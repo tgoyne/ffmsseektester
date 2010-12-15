@@ -20,18 +20,4 @@ enum ERROR_TYPE {
 	ERR_SEEK
 };
 
-class FFMS_AudioSource;
-class audio_tester {
-	FFMS_AudioSource *audio_source;
-	vector<uint8_t> pcm;
-	uint8_t zero_buffer[100];
-	uint8_t decode_buffer[15100];
-
-public:
-	int bytes_per_sample;
-	size_t num_samples;
-
-	audio_tester(fs::path const& test_file);
-	~audio_tester();
-	size_t test(int err_code, int iterations, size_t start_sample);
-};
+string run_audio_test(fs::path const& path);
