@@ -1,6 +1,6 @@
 #include "pre.h"
 
-#include "audio_tester.h"
+#include "test_runner.h"
 #include "ffms.h"
 
 class error : public exception {
@@ -148,7 +148,7 @@ static void write_log(ostream *log, int err, fs::path path) {
 	write_log(log, format("%d %s\n") % err % path);
 }
 
-void audio_tester::run_test(fs::path path) {
+void test_runner::run_test(fs::path path) {
 	if (!fs::exists(path)) {
 		(*error) << path << "not found." << endl;
 		return;
@@ -170,7 +170,7 @@ void audio_tester::run_test(fs::path path) {
 		write_log(log, 0, path);
 	}
 }
-void audio_tester::launch_tester(fs::path path) {
+void test_runner::launch_tester(fs::path path) {
 	vector<string> args;
 	args.push_back("--log=-");
 	args.push_back(b::erase_all_copy(path.string(), "\""));
@@ -185,7 +185,7 @@ void audio_tester::launch_tester(fs::path path) {
 	write_log(log, a.str());
 }
 
-static void check_regression(audio_tester &out, int expected_err_code, string const& file_path) {
+static void check_regression(test_runner &out, int expected_err_code, string const& file_path) {
 	stringstream ss;
 	out.log = &ss;
 
@@ -207,7 +207,7 @@ static void check_regression(audio_tester &out, int expected_err_code, string co
 	}
 }
 
-void audio_tester::check_regressions(fs::path log_path) {
+void test_runner::check_regressions(fs::path log_path) {
 	fs::fstream log_file(log_path);
 	if (!log_file.good()) {
 		(*error) << "could not open log file " << log_path << endl;

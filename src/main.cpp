@@ -1,6 +1,6 @@
 #include "pre.h"
 
-#include "audio_tester.h"
+#include "test_runner.h"
 #include "ffms.h"
 
 static bool extension_filter(fs::path path) {
@@ -43,7 +43,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 	}
 
 	fstream dummy_ofstream;
-	audio_tester tester = {
+	test_runner tester = {
 		&dummy_ofstream,
 		&cerr,
 		&dummy_ofstream,
@@ -91,7 +91,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 		}
 
 		if (!tester.spawn_children)
-			b::for_each(paths, b::bind(&audio_tester::run_test, &tester, _1));
+			b::for_each(paths, b::bind(&test_runner::run_test, &tester, _1));
 		else {
 			#pragma omp parallel for
 			for (int i = 0; i < (int)paths.size(); ++i) {

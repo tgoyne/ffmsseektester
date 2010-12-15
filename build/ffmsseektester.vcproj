@@ -171,10 +171,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\audiotest.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\src\main.cpp"
 				>
 			</File>
@@ -200,16 +196,20 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath="..\src\test_runner.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			>
 			<File
-				RelativePath="..\src\audio_tester.h"
+				RelativePath="..\src\pre.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\pre.h"
+				RelativePath="..\src\test_runner.h"
 				>
 			</File>
 		</Filter>

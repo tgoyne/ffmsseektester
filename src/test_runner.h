@@ -1,4 +1,4 @@
-class audio_tester {
+class test_runner {
 public:
 	ostream *verbose;
 	ostream *error;
