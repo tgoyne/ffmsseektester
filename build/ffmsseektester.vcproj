@@ -39,11 +39,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zm120"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../trunk/include"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pre.h"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -108,12 +111,15 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/Zm120"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../../trunk/include"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				OpenMP="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="pre.h"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -166,6 +172,36 @@
 			>
 			<File
 				RelativePath="..\src\audiotest.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\pre.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="pre.h"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+						PrecompiledHeaderThrough="pre.h"
+					/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+		<Filter
+			Name="Header Files"
+			>
+			<File
+				RelativePath="..\src\pre.h"
 				>
 			</File>
 		</Filter>
