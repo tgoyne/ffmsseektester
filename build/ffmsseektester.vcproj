@@ -175,6 +175,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\main.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\pre.cpp"
 				>
 				<FileConfiguration
@@ -200,6 +204,10 @@
 		<Filter
 			Name="Header Files"
 			>
+			<File
+				RelativePath="..\src\audio_tester.h"
+				>
+			</File>
 			<File
 				RelativePath="..\src\pre.h"
 				>

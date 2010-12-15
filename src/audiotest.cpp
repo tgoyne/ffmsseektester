@@ -1,5 +1,6 @@
 #include "pre.h"
 
+#include "audio_tester.h"
 #include "ffms.h"
 
 class error : public exception {
@@ -28,16 +29,6 @@ public:
 		return *this;
 	}
 };
-
-struct output {
-	ostream *verbose;
-	ostream *error;
-	ostream *log;
-	fs::path self;
-	bool spawn_children;
-};
-
-static bool disable_haali;
 
 static void read_pcm(fs::path file, vector<uint8_t> &pcm) {
 	// don't bother reading any of the format information, as we already know
@@ -157,31 +148,29 @@ static void write_log(ostream *log, int err, fs::path path) {
 	write_log(log, format("%d %s\n") % err % path);
 }
 
-static void launch_tester(output &out, fs::path path);
-
-static void run_test(output &out, fs::path path) {
+void audio_tester::run_test(fs::path path) {
 	if (!fs::exists(path)) {
-		(*out.error) << path << "not found." << endl;
+		(*error) << path << "not found." << endl;
 		return;
 	}
 	if (!fs::is_regular_file(path)) return;
 
-	(*out.verbose) << path << ": ";
+	(*verbose) << path << ": ";
 	try {
 		test(path);
-		(*out.verbose) << "passed" << endl;
-		write_log(out.log, -1, path);
+		(*verbose) << "passed" << endl;
+		write_log(log, -1, path);
 	}
-	catch (error const& e) {
-		(*out.verbose) << e.what() << endl;
-		write_log(out.log, e.type, path);
+	catch (::error const& e) {
+		(*verbose) << e.what() << endl;
+		write_log(log, e.type, path);
 	}
 	catch (exception const& e) {
-		(*out.verbose) << e.what() << endl;
-		write_log(out.log, 0, path);
+		(*verbose) << e.what() << endl;
+		write_log(log, 0, path);
 	}
 }
-static void launch_tester(output &out, fs::path path) {
+void audio_tester::launch_tester(fs::path path) {
 	vector<string> args;
 	args.push_back("--log=-");
 	args.push_back(b::erase_all_copy(path.string(), "\""));
@@ -189,18 +178,18 @@ static void launch_tester(output &out, fs::path path) {
 		args.push_back("--disable-haali");
 	p::context ctx;
 	ctx.streams[p::stdout_id] = p::behavior::pipe();
-	p::child c = p::create_child(out.self.string(), args, ctx);
+	p::child c = p::create_child(self.string(), args, ctx);
 	c.wait();
 	stringstream a;
 	a << p::pistream(c.get_handle(p::stdout_id)).rdbuf();
-	write_log(out.log, a.str());
+	write_log(log, a.str());
 }
 
-static void check_regression(output out, int expected_err_code, string const& file_path) {
+static void check_regression(audio_tester &out, int expected_err_code, string const& file_path) {
 	stringstream ss;
 	out.log = &ss;
 
-	launch_tester(out, file_path);
+	out.launch_tester(file_path);
 
 	if (ss.str().empty()) {
 		if (expected_err_code == 1)
@@ -218,10 +207,10 @@ static void check_regression(output out, int expected_err_code, string const& fi
 	}
 }
 
-static void check_regressions(output &out, fs::path log_path) {
+void audio_tester::check_regressions(fs::path log_path) {
 	fs::fstream log_file(log_path);
 	if (!log_file.good()) {
-		(*out.error) << "could not open log file " << log_path << endl;
+		(*error) << "could not open log file " << log_path << endl;
 		return;
 	}
 	vector<pair<int, string>> files;
@@ -233,113 +222,15 @@ static void check_regressions(output &out, fs::path log_path) {
 		b::trim(file_path);
 		files.push_back(make_pair(expected_err_code, file_path));
 	}
-	if (out.spawn_children) {
+	if (spawn_children) {
 		#pragma omp parallel for
 		for (int i = 0; i < (int)files.size(); ++i) {
-			check_regression(out, files[i].first, files[i].second);
+			check_regression(*this, files[i].first, files[i].second);
 		}
 	}
 	else {
 		for (size_t i = 0; i < files.size(); ++i) {
-			check_regression(out, files[i].first, files[i].second);
+			check_regression(*this, files[i].first, files[i].second);
 		}
 	}
-}
-
-static bool extension_filter(fs::path path) {
-	static set<string> bad_ext;
-	if (bad_ext.empty()) {
-		bad_ext += ".ffindex", ".txt", ".exe", ".doc", ".EXE", ".rar", ".zip", ".dll", ".DOC", ".ini", ".zip";
-	}
-	return find(bad_ext.begin(), bad_ext.end(), path.extension().string()) == bad_ext.end();
-}
-
-int _tmain(int argc, _TCHAR *argv[]) {
-	po::options_description opt("Allowed options");
-	opt.add_options()
-		("help", "")
-		("verbose,v", "")
-		("log", po::value<string>(), "")
-		("run-regression-test", "")
-		("spawn-children", "spawn child processes for each test to better handle crashes")
-		("disable-haali", "don't use Haali's splitters even if ffms2 was built with them")
-		("path", po::value<vector<string>>(), "path to files to test");
-
-	po::positional_options_description p;
-	p.add("path", -1);
-
-	po::variables_map vm;
-	try {
-		po::store(command_line_parser(argc, argv).options(opt).positional(p).run(), vm);
-		po::notify(vm);
-	}
-	catch (exception const& e) {
-		cerr << e.what() << endl;
-		return 1;
-	}
-
-	if (vm.count("help") ||
-		(!vm.count("path") && !vm.count("run-regression-test")) ||
-		(vm.count("run-regression-test") && !vm.count("log"))) {
-		cerr << "Usage: ffmstest [options] input-file...\n" << opt << endl;
-		return 1;
-	}
-
-	disable_haali = !!vm.count("disable-haali");
-#ifdef _WIN32
-#ifndef _DEBUG
-	SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
-#endif
-	if (!disable_haali)
-		CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-#endif
-
-	fstream dummy_ofstream;
-	fs::ofstream log_stream;
-	output out = { &dummy_ofstream, &cerr, &dummy_ofstream, fs::path(argv[0]), !!vm.count("spawn-children") };
-
-	if (vm.count("verbose"))
-		out.verbose = &cout;
-
-	if (vm.count("log")) {
-		if (vm["log"].as<string>() == "-")
-			out.log = &cout;
-		else if (!vm.count("run-regression-test")) {
-			log_stream.open(vm["log"].as<string>());
-			out.log = &log_stream;
-		}
-	}
-
-	FFMS_Init(0, true);
-
-	if (vm.count("run-regression-test")) {
-		check_regressions(out, vm["log"].as<string>());
-	}
-	else {
-		vector<fs::path> paths;
-		foreach (string path, vm["path"].as<vector<string>>() | a::filtered(extension_filter)) {
-			if (fs::is_directory(path))
-				b::copy(
-					b::make_iterator_range(fs::recursive_directory_iterator(path), fs::recursive_directory_iterator()) | a::filtered(extension_filter),
-					back_inserter(paths));
-			else
-				paths.push_back(path);
-		}
-
-		if (paths.size() == 1 || !out.spawn_children)
-			b::for_each(paths, b::bind(run_test, out, _1));
-		else {
-			#pragma omp parallel for
-			for (int i = 0; i < (int)paths.size(); ++i) {
-				write_log(out.verbose, i, paths[i]);
-				launch_tester(out, paths[i]);
-			}
-		}
-	}
-
-#ifdef _WIN32
-	CoUninitialize();
-#endif
-
-	return 0;
 }
