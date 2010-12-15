@@ -23,84 +23,74 @@ test_result test_spawner::operator()(fs::path path) {
 }
 
 
-test_runner::test_runner(bool verbose, bool spawn_children, string log_path, b::function<string (fs::path)> test_function)
+test_runner::test_runner(bool verbose, bool spawn_children, string log_path, b::function<test_result (fs::path)> test_function)
 : verbose(verbose)
 , spawn_children(spawn_children)
 , log_path(log_path)
 , test_function(test_function)
 {
-
+	if (log_path == "-") {
+		log = &cout;
+	}
+	else {
+		log_out_file.open(log_path);
+		log = &log_out_file;
+	}
 }
 
 
 void test_runner::run_regression() {
 	fs::fstream log_file(log_path);
 	if (!log_file.good()) {
-		(*s_err) << "could not open log file " << log_path << endl;
+		cerr << "could not open log file " << log_path << endl;
 		return;
 	}
 
-	vector<pair<int, string>> files;
-	while (log_file.good()) {
-		string file_path;
-		int expected_err_code;
-		log_file >> expected_err_code;
-		getline(log_file, file_path);
-		b::trim(file_path);
-		files.push_back(make_pair(expected_err_code, file_path));
+	vector<test_result> files;
+	while (!log_file.eof() && log_file.good()) {
+		string line;
+		getline(log_file, line);
+		files.push_back(line);
 	}
 
 	if (spawn_children) {
 		#pragma omp parallel for
 		for (int i = 0; i < (int)files.size(); ++i) {
-			check_regression(files[i].first, files[i].second);
+			check_regression(files[i]);
 		}
 	}
 	else {
 		for (size_t i = 0; i < files.size(); ++i) {
-			check_regression(files[i].first, files[i].second);
+			check_regression(files[i]);
 		}
 	}
 }
 
-void test_runner::check_regression(int expected_err_code, string const& file_path) {
-	string res = test_function(file_path);
+void test_runner::check_regression(test_result expected) {
+	test_result actual = test_function(expected.path);
 
-	if (res.empty()) {
-		if (expected_err_code == 1)
-			(*s_verbose) << file_path << " crashed as expected" << endl;
-		else
-			(*s_err) << file_path << " crashed!" << endl;
+	if (actual == expected) {
+		if (verbose) cerr << expected.path << " behaved as expected" << endl;
 	}
 	else {
-		int actual_err_code = b::lexical_cast<int>(res);
-		if (actual_err_code == expected_err_code)
-			(*s_verbose) << file_path << " behaved as expected" << endl;
-		else
-			(*s_err) << file_path << " expected " << expected_err_code << ", got " << actual_err_code;
+		cerr << expected.path << " expected " << expected.errcode << " got " << actual.errcode << endl;
 	}
 }
 
 void test_runner::run_test(fs::path path) {
 	if (!fs::exists(path)) {
-		(*s_err) << path << "not found." << endl;
+		cerr << path << "not found." << endl;
 		return;
 	}
 	if (!fs::is_regular_file(path)) return;
 
+	if (verbose) cerr << path << ": ";
 	test_result result = test_function(path);
-	/*(*verbose) << path << ": ";
-	try {
-		test(path);
-		(*verbose) << "passed" << endl;
-		write_log(log, -1, path);
+	if (verbose) {
+		if (result.errcode == ERR_SUCCESS)
+			cerr << "passed" << endl;
+		else
+			cerr << result.msg << endl;
 	}
-	catch (::error const& e) {
-		(*verbose) << e.what() << endl;
-		write_log(log, e.type, path);
-	}
-	catch (exception const& e) {
-		(*verbose) << e.what() << endl;
-		write_log(log, 0, path);
-	}*/
+	(*log) << (string)result << endl;
 }

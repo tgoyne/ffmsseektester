@@ -127,6 +127,6 @@ test_result run_audio_test(fs::path const& test_file) {
 	catch (exception const& e) {
 		return test_result(ERR_UNKNOWN, test_file, e.what());
 	}
-	return test_result(test_file);
+	return test_result(ERR_SUCCESS, test_file);
 }
 

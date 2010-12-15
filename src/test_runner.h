@@ -1,16 +1,15 @@
 class test_runner {
-	ostream *s_verbose;
-	ostream *s_err;
-	ostream *s_log;
+	fs::ofstream log_out_file;
+	ostream *log;
 
 	bool verbose;
 	bool spawn_children;
 	fs::path log_path;
 	b::function<test_result (fs::path)> test_function;
 
-	void check_regression(int expected_err_code, string const& file_path);
+	void check_regression(test_result expected);
 public:
-	test_runner(bool verbose, bool spawn_children, string log_path, b::function<string (fs::path)> test_function);
+	test_runner(bool verbose, bool spawn_children, string log_path, b::function<test_result (fs::path)> test_function);
 
 	void run_regression();
 	void run_test(fs::path path);
