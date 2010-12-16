@@ -63,9 +63,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 		test_function);
 
 #ifdef _WIN32
-#ifndef _DEBUG
-	SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
-#endif
+	if (!spawn_children) SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
 	if (!disable_haali)
 		CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 #endif
