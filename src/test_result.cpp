@@ -5,6 +5,7 @@
 
 test_result::test_result(string str)
 {
+	b::trim(str);
 	vector<string> chunks;
 	b::split(chunks, str, b::is_any_of(":"));
 	errcode = static_cast<error_type>(b::lexical_cast<int>(chunks[0]));
@@ -24,7 +25,7 @@ test_result::operator string() {
 	b::erase_all(strpath, "\"");
 	b::trim(strpath);
 
-	return format("%d:%s:%s") % errcode % strpath % msg;
+	return format("%d:%s:%s\n") % errcode % strpath % msg;
 }
 bool operator==(test_result const& lft, test_result const& rgt) {
 	return lft.errcode == rgt.errcode && lft.path == rgt.path;

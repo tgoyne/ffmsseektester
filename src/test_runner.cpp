@@ -99,5 +99,5 @@ void test_runner::run_test(fs::path path) {
 	}
 
 	b::lock_guard<b::mutex> lock(log_mutex);
-	(*log) << (string)result << endl;
+	(*log) << (string)result << flush;
 }
