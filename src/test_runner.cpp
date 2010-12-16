@@ -72,6 +72,7 @@ void test_runner::check_regression(test_result expected) {
 	}
 }
 
+static b::mutex log_mutex;
 void test_runner::run_test(fs::path path) {
 	if (!fs::exists(path)) {
 		cerr << path << "not found." << endl;
@@ -96,5 +97,7 @@ void test_runner::run_test(fs::path path) {
 			log = &log_out_file;
 		}
 	}
+
+	b::lock_guard<b::mutex> lock(log_mutex);
 	(*log) << (string)result << endl;
 }
