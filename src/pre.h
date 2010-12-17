@@ -11,6 +11,7 @@
 #include <boost/format.hpp>
 #include <boost/function.hpp>
 #include <boost/process.hpp>
+#include <boost/progress.hpp>
 #include <boost/program_options.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm.hpp>

@@ -23,6 +23,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 		("run-regression-test", "")
 		("spawn-children", "spawn child processes for each test to better handle crashes")
 		("disable-haali", "don't use Haali's splitters even if ffms2 was built with them")
+		("progress", "")
 		("path", po::value<vector<string>>(), "path to files to test");
 
 	po::positional_options_description p;
@@ -47,6 +48,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 
 	bool disable_haali = !!vm.count("disable-haali");
 	bool spawn_children = !!vm.count("spawn-children");
+	bool progress = !!vm.count("progress");
 
 	b::function<test_result (fs::path)> test_function;
 	if (!spawn_children) {
@@ -84,14 +86,25 @@ int _tmain(int argc, _TCHAR *argv[]) {
 				paths.push_back(path);
 		}
 
-		if (!spawn_children)
-			b::for_each(paths, b::bind(&test_runner::run_test, &tester, _1));
-		else {
-			#pragma omp parallel for
-			for (int i = 0; i < (int)paths.size(); ++i) {
+		b::timer timer;
+		double complete = 0;
+		int path_count = (int)paths.size();
+		#pragma omp parallel if (spawn_children)
+		{
+			#pragma omp for nowait
+			for (int i = 0; i < path_count; ++i) {
 				tester.run_test(paths[i]);
+
+				#pragma omp critical
+				if (progress) {
+					++complete;
+					double percent = complete / path_count;
+					double eta = timer.elapsed() / percent * (1 - percent);
+					cout << "\r" << percent * 100 << "% " << eta << "      " << flush;
+				}
 			}
 		}
+		if (progress) cout << endl;
 	}
 
 #ifdef _WIN32
