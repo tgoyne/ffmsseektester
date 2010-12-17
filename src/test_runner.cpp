@@ -48,14 +48,10 @@ void test_runner::run_regression() {
 			files.push_back(line);
 	}
 
-	if (spawn_children) {
-		#pragma omp parallel for
+	#pragma omp parallel if (spawn_children)
+	{
+		#pragma omp for nowait
 		for (int i = 0; i < (int)files.size(); ++i) {
-			check_regression(files[i]);
-		}
-	}
-	else {
-		for (size_t i = 0; i < files.size(); ++i) {
 			check_regression(files[i]);
 		}
 	}
@@ -72,7 +68,6 @@ void test_runner::check_regression(test_result expected) {
 	}
 }
 
-static b::mutex log_mutex;
 void test_runner::run_test(fs::path path) {
 	if (!fs::exists(path)) {
 		cerr << path << "not found." << endl;
@@ -98,6 +93,6 @@ void test_runner::run_test(fs::path path) {
 		}
 	}
 
-	b::lock_guard<b::mutex> lock(log_mutex);
+	#pragma omp critical
 	(*log) << (string)result << flush;
 }
