@@ -19,7 +19,9 @@ test_result test_spawner::operator()(fs::path path) {
 	c.wait();
 	stringstream ss;
 	ss << p::pistream(c.get_handle(p::stdout_id)).rdbuf();
-	return ss.str();
+	test_result ret(ss.str());
+	if (ret.path.empty()) ret.path = path;
+	return ret;
 }
 
 
@@ -83,16 +85,19 @@ void test_runner::run_test(fs::path path) {
 		else
 			cerr << result.msg << endl;
 	}
-	if (!log) {
-		if (log_path == "-") {
-			log = &cout;
-		}
-		else {
-			log_out_file.open(log_path);
-			log = &log_out_file;
-		}
-	}
 
 	#pragma omp critical
-	(*log) << (string)result << flush;
+	{
+		if (!log) {
+			if (log_path == "-") {
+				log = &cout;
+			}
+			else {
+				log_out_file.open(log_path);
+				log = &log_out_file;
+			}
+		}
+
+		(*log) << (string)result << flush;
+	}
 }

@@ -6,11 +6,16 @@
 test_result::test_result(string str)
 {
 	b::trim(str);
-	vector<string> chunks;
-	b::split(chunks, str, b::is_any_of(":"));
-	errcode = static_cast<error_type>(b::lexical_cast<int>(chunks[0]));
-	path = chunks[1];
-	msg = chunks[2];
+	if (str.empty()) {
+		errcode = ERR_CRASH;
+	}
+	else {
+		vector<string> chunks;
+		b::split(chunks, str, b::is_any_of(":"));
+		errcode = static_cast<error_type>(b::lexical_cast<int>(chunks[0]));
+		path = chunks[1];
+		msg = chunks[2];
+	}
 }
 
 test_result::test_result(int errcode, fs::path path, string msg)
