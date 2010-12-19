@@ -40,7 +40,11 @@ static FFMS_AudioSource *init_ffms(fs::path const& file) {
 	int track = FFMS_GetFirstTrackOfType(index.get(), FFMS_TYPE_AUDIO, 0);
 	if (track == -1) throw error(ERR_NO_AUDIO, "no audio tracks found");
 
+#if FFMS_VERSION > ((2 << 24) | (14 << 16) | (0 << 8) | 1)
+	return FFMS_CreateAudioSource(sfile.c_str(), track, index.get(), -3, 0);
+#else
 	return FFMS_CreateAudioSource(sfile.c_str(), track, index.get(), 0);
+#endif
 }
 
 class audio_tester {
