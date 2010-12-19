@@ -75,7 +75,21 @@ void test_runner::check_regression(vector<test_result> files, size_t start, size
 		}
 		else {
 			b::lock_guard<b::mutex> lock(mut);
-			cerr << expected.path << " expected " << expected.errcode << " got " << actual.errcode << endl;
+			if (expected.errcode == ERR_CRASH) {
+				cerr << expected.path << " IMPROVEMENT: expected a crash, got " << actual.errcode << endl;
+			}
+			else if (actual.errcode == ERR_SUCCESS) {
+				cerr << expected.path << " IMPROVEMENT: succeeded; expected a failure (" << expected.errcode << ")" << endl;
+			}
+			else if (expected.errcode == ERR_SUCCESS) {
+				cerr << expected.path << " REGRESSION: expected success, got " << actual.errcode << endl;
+			}
+			else if (expected.errcode == ERR_INITIAL_DECODE && actual.errcode == ERR_SEEK) {
+				cerr << expected.path << " IMPROVEMENT: expected initial decode failure, got seek failure" << endl;
+			}
+			else {
+				cerr << expected.path << " CHANGED: expected " << expected.errcode << " got " << actual.errcode << endl;
+			}
 		}
 	}
 }
