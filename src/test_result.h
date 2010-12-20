@@ -17,6 +17,12 @@ struct test_result {
 	test_result(string);
 	test_result(int errcode, fs::path path, string msg = "");
 
-	operator string();
+	test_result& operator=(test_result const& rgt);
+	operator string() const;
 };
 bool operator==(test_result const& lft, test_result const& rgt);
+
+template<class T>
+T& operator<<(T& dst, test_result const& test) {
+	return dst << (string)test;
+}

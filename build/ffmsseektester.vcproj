@@ -226,6 +226,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\ptransform.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\test_result.h"
 				>
 			</File>

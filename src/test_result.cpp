@@ -25,12 +25,19 @@ test_result::test_result(int errcode, fs::path path, string msg)
 {
 }
 
-test_result::operator string() {
+test_result::operator string() const {
 	string strpath = path.string();
 	b::erase_all(strpath, "\"");
 	b::trim(strpath);
 
 	return format("%d:%s:%s\n") % errcode % strpath % msg;
+}
+
+test_result& test_result::operator=(test_result const& rgt) {
+	errcode = rgt.errcode;
+	path = rgt.path;
+	msg = rgt.msg;
+	return *this;
 }
 bool operator==(test_result const& lft, test_result const& rgt) {
 	return lft.errcode == rgt.errcode && lft.path == rgt.path;

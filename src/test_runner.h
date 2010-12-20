@@ -7,7 +7,7 @@ class test_runner {
 	fs::path log_path;
 	b::function<test_result (fs::path)> test_function;
 
-	void check_regression(vector<test_result> files, size_t start, size_t count);
+	string check_regression(test_result file);
 public:
 	test_runner(bool verbose, bool spawn_children, string log_path, b::function<test_result (fs::path)> test_function);
 

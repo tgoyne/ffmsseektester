@@ -5,11 +5,13 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/std/set.hpp>
 #include <boost/bind.hpp>
+#include <boost/bind/protect.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/function.hpp>
+#include <boost/iterator.hpp>
 #include <boost/process.hpp>
 #include <boost/progress.hpp>
 #include <boost/program_options.hpp>

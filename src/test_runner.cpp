@@ -2,6 +2,7 @@
 
 #include "audio_tester.h"
 #include "format.h"
+#include "ptransform.h"
 #include "test_runner.h"
 #include "test_result.h"
 
@@ -50,47 +51,36 @@ void test_runner::run_regression() {
 			files.push_back(line);
 	}
 
-	size_t file_count = files.size();
-	size_t files_per_thread = files.size() / 8 + 1;
-	b::thread threads[8];
-	size_t start = 0;
-	foreach (b::thread &t, threads) {
-		t = b::move(b::thread(b::bind(&test_runner::check_regression, this, files, start, files_per_thread)));
-		start += files_per_thread;
-	}
-	b::for_each(threads, b::bind(&b::thread::join, _1));
+	if (spawn_children)
+		ptransform(files, ostream_iterator<test_result>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1)));
+	else
+		transform(files, ostream_iterator<test_result>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1)));
 }
 
-void test_runner::check_regression(vector<test_result> files, size_t start, size_t count) {
-	for (size_t i = start; i < start+ count && i + files.size(); ++i) {
-		test_result &expected = files[i];
-		test_result actual = test_function(expected.path);
+string test_runner::check_regression(test_result expected) {
+	test_result actual = test_function(expected.path);
 
-		static b::mutex mut;
-		if (actual == expected) {
-			if (verbose) {
-				b::lock_guard<b::mutex> lock(mut);
-				cerr << expected.path << " behaved as expected" << endl;
-			}
+	if (actual == expected) {
+		if (verbose) {
+			return format("%s behaved as expected\n") % expected.path;
 		}
-		else {
-			b::lock_guard<b::mutex> lock(mut);
-			if (expected.errcode == ERR_CRASH) {
-				cerr << expected.path << " IMPROVEMENT: expected a crash, got " << actual.errcode << endl;
-			}
-			else if (actual.errcode == ERR_SUCCESS) {
-				cerr << expected.path << " IMPROVEMENT: succeeded; expected a failure (" << expected.errcode << ")" << endl;
-			}
-			else if (expected.errcode == ERR_SUCCESS) {
-				cerr << expected.path << " REGRESSION: expected success, got " << actual.errcode << endl;
-			}
-			else if (expected.errcode == ERR_INITIAL_DECODE && actual.errcode == ERR_SEEK) {
-				cerr << expected.path << " IMPROVEMENT: expected initial decode failure, got seek failure" << endl;
-			}
-			else {
-				cerr << expected.path << " CHANGED: expected " << expected.errcode << " got " << actual.errcode << endl;
-			}
+		return "";
+	}
+	else {
+		if (expected.errcode == ERR_CRASH) {
+			return format("IMPROVEMENT %s expected a crash, got %d\n") % expected.path % actual.errcode;
 		}
+		if (actual.errcode == ERR_SUCCESS) {
+			return format("IMPROVEMENT %s expected a failure (%d), succeeded\n") % expected.path % expected.errcode;
+		}
+		if (expected.errcode == ERR_SUCCESS) {
+			return format("REGRESSION %s expected success, got %d\n") % expected.path % actual.errcode;
+			cerr << expected.path << " REGRESSION: expected success, got " << actual.errcode << endl;
+		}
+		if (expected.errcode == ERR_INITIAL_DECODE && actual.errcode == ERR_SEEK) {
+			return format("IMPROVEMENT %s expected initial decode failure, got seek failure\n") % expected.path;
+		}
+		return format("CHANGED %s expected %d, got %d\n") % expected.path % expected.errcode % actual.errcode;
 	}
 }
 
