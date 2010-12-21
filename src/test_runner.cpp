@@ -52,9 +52,9 @@ void test_runner::run_regression() {
 	}
 
 	if (spawn_children)
-		ptransform(files, ostream_iterator<test_result>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1)));
+		ptransform(files, ostream_iterator<string>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1)));
 	else
-		transform(files, ostream_iterator<test_result>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1)));
+		transform(files, ostream_iterator<string>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1)));
 }
 
 string test_runner::check_regression(test_result expected) {

@@ -19,6 +19,7 @@
 #include <boost/range/algorithm.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
+#include <boost/typeof/typeof.hpp>
 #include <iostream>
 #include <omp.h>
 #include <vector>

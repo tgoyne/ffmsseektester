@@ -1,9 +1,9 @@
-#undef max
+#undef min
 
 template<class InputIterator, class OutputIterator, class UnaryOperation, class MutexType>
 void ptransform_wrapper(InputIterator begin, InputIterator end, OutputIterator out, UnaryOperation func, MutexType &mutex) {
 	for (; begin != end; ++begin, ++out) {
-		b::pointee<InputIterator>::type res(func(*begin));
+		BOOST_AUTO_TPL(res, func(*begin));
 		b::lock_guard<MutexType> lock(mutex);
 		*out = res;
 	}
@@ -20,7 +20,7 @@ void ptransform(RandomAccessRange const& rng, OutputIterator out, UnaryOperation
 	InputIterator begin = b::begin(rng);
 	b::mutex mutex;
 	for (unsigned i = 0; i < thread_count; ++i) {
-		InputIterator end = begin + max<size_type>(count / thread_count, distance(begin, b::end(rng)));
+		InputIterator end = begin + min<size_type>(count / thread_count + 1, distance(begin, b::end(rng)));
 		threads.create_thread(
 			b::bind(
 				ptransform_wrapper<InputIterator, OutputIterator, UnaryOperation, b::mutex>,
