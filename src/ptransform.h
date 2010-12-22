@@ -1,11 +1,15 @@
 #undef min
 
+template<class Value, class OutputIterator, class UnaryOperation, class MutexType>
+void locked_apply(Value const& value, OutputIterator out, UnaryOperation func, MutexType &mutex) {
+	b::lock_guard<MutexType> lock(mutex);
+	*out = value;
+}
+
 template<class InputIterator, class OutputIterator, class UnaryOperation, class MutexType>
 void ptransform_wrapper(InputIterator begin, InputIterator end, OutputIterator out, UnaryOperation func, MutexType &mutex) {
 	for (; begin != end; ++begin, ++out) {
-		BOOST_AUTO_TPL(res, func(*begin));
-		b::lock_guard<MutexType> lock(mutex);
-		*out = res;
+		locked_apply(func(*begin), out, func, mutex);
 	}
 }
 
@@ -14,7 +18,7 @@ void ptransform(RandomAccessRange const& rng, OutputIterator out, UnaryOperation
 	typedef b::range_difference<RandomAccessRange>::type size_type;
 	typedef b::range_const_iterator<RandomAccessRange>::type InputIterator;
 	size_type count = b::distance(rng);
-	unsigned thread_count = b::thread::hardware_concurrency();
+	unsigned thread_count = b::thread::hardware_concurrency() * 2;
 	b::thread_group threads;
 
 	InputIterator begin = b::begin(rng);
