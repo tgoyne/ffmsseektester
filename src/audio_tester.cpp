@@ -64,6 +64,8 @@ public:
 
 audio_tester::audio_tester(fs::path const& test_file) {
 	audio_source = init_ffms(test_file);
+	if (!audio_source)
+		throw error(ERR_NO_AUDIO, "failed to create audio source");
 	const FFMS_AudioProperties *audio_properties = FFMS_GetAudioProperties(audio_source);
 	bytes_per_sample = audio_properties->BitsPerSample / 8 * audio_properties->Channels;
 	// if NumSamples doesn't fit in size_t, we won't be able to load the decoded file anyway
