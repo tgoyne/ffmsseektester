@@ -80,7 +80,7 @@ string test_runner::check_regression(test_result expected) {
 		if (expected.errcode == ERR_INITIAL_DECODE && actual.errcode == ERR_SEEK) {
 			return format("IMPROVEMENT %s expected initial decode failure, got seek failure\n") % expected.path;
 		}
-		return format("CHANGED %s expected %d, got %d\n") % expected.path % expected.errcode % actual.errcode;
+		return format("%s %s expected %d got %d") % (expected.errcode > actual.errcode ? "IMPROVEMENT" : "REGRESSION") % expected.path % expected.errcode % actual.errcode;
 	}
 }
 
