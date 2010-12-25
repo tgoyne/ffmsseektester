@@ -93,7 +93,12 @@ size_t audio_tester::test(int err_code, int iterations, size_t start_sample) {
 	if (memcmp(zero_buffer, decode_buffer + 15000, 100))
 		throw error(err_code, format("(%1%) %2%-%3% overflow") % iterations % start_sample % sample_count);
 
-	if (!memcmp(decode_buffer, &pcm[start_sample * bytes_per_sample], sample_count * bytes_per_sample))
+	pair<uint8_t*, vector<uint8_t>::iterator> diff = mismatch(
+		decode_buffer,
+		decode_buffer + sample_count * bytes_per_sample,
+		b::begin(pcm) + start_sample * bytes_per_sample);
+
+	if (diff.first == decode_buffer + sample_count * bytes_per_sample)
 		return sample_count;
 
 	// either the decoder barfed or it seeked to the wrong place, so check
