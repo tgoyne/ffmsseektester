@@ -2,6 +2,7 @@
 
 #include "audio_tester.h"
 #include "format.h"
+#include "progress.h"
 #include "ptransform.h"
 #include "test_runner.h"
 #include "test_result.h"
@@ -36,7 +37,7 @@ test_runner::test_runner(bool verbose, bool spawn_children, string log_path, b::
 }
 
 
-void test_runner::run_regression() {
+void test_runner::run_regression(bool show_progress) {
 	fs::fstream log_file(log_path);
 	if (!log_file.good()) {
 		cerr << "could not open log file " << log_path << endl;
@@ -51,14 +52,16 @@ void test_runner::run_regression() {
 			files.push_back(line);
 	}
 
+	progress prog(show_progress ? files.size() : 0);
 	if (spawn_children)
-		ptransform(files, ostream_iterator<string>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1)));
+		ptransform(files, ostream_iterator<string>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1, b::ref(prog))));
 	else
-		transform(files, ostream_iterator<string>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1)));
+		transform(files, ostream_iterator<string>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1, b::ref(prog))));
 }
 
-string test_runner::check_regression(test_result expected) {
+string test_runner::check_regression(test_result expected, progress &prog) {
 	test_result actual = test_function(expected.path);
+	++prog;
 
 	if (actual == expected) {
 		if (verbose) {
@@ -84,7 +87,7 @@ string test_runner::check_regression(test_result expected) {
 	}
 }
 
-void test_runner::run_test(fs::path path) {
+void test_runner::run_test(fs::path path, progress &prog) {
 	if (!fs::exists(path)) {
 		cerr << path << "not found." << endl;
 		return;
@@ -100,18 +103,20 @@ void test_runner::run_test(fs::path path) {
 			cerr << result.msg << endl;
 	}
 
-	#pragma omp critical
-	{
-		if (!log) {
-			if (log_path == "-") {
-				log = &cout;
-			}
-			else {
-				log_out_file.open(log_path);
-				log = &log_out_file;
-			}
-		}
+	++prog;
 
-		(*log) << (string)result << flush;
+	static b::mutex log_mutex;
+	b::lock_guard<b::mutex> lock(log_mutex);
+
+	if (!log) {
+		if (log_path == "-") {
+			log = &cout;
+		}
+		else {
+			log_out_file.open(log_path);
+			log = &log_out_file;
+		}
 	}
+
+	(*log) << (string)result << flush;
 }

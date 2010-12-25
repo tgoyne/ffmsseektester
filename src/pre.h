@@ -20,7 +20,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include <iostream>
-#include <omp.h>
 #include <vector>
 
 using namespace std;

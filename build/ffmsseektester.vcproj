@@ -45,7 +45,6 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				OpenMP="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pre.h"
 				WarningLevel="3"
@@ -118,7 +117,6 @@
 				AdditionalIncludeDirectories="../../trunk/include"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				OpenMP="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="pre.h"
 				WarningLevel="3"
@@ -202,6 +200,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\src\progress.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\test_result.cpp"
 				>
 			</File>
@@ -223,6 +225,10 @@
 			</File>
 			<File
 				RelativePath="..\src\pre.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\progress.h"
 				>
 			</File>
 			<File

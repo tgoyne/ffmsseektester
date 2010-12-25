@@ -1,6 +1,7 @@
 #include "pre.h"
 
 #include "audio_tester.h"
+#include "progress.h"
 #include "test_runner.h"
 #include "test_result.h"
 
@@ -48,7 +49,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 
 	bool disable_haali = !!vm.count("disable-haali");
 	bool spawn_children = !!vm.count("spawn-children");
-	bool progress = !!vm.count("progress");
+	bool enable_progress = !!vm.count("progress");
 
 	b::function<test_result (fs::path)> test_function;
 	if (!spawn_children) {
@@ -73,7 +74,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 	FFMS_Init(0, true);
 
 	if (vm.count("run-regression-test")) {
-		tester.run_regression();
+		tester.run_regression(enable_progress);
 	}
 	else {
 		vector<fs::path> paths;
@@ -86,25 +87,11 @@ int _tmain(int argc, _TCHAR *argv[]) {
 				paths.push_back(path);
 		}
 
-		b::timer timer;
-		double complete = 0;
-		int path_count = (int)paths.size();
-		#pragma omp parallel if (spawn_children)
-		{
-			#pragma omp for nowait
-			for (int i = 0; i < path_count; ++i) {
-				tester.run_test(paths[i]);
+		progress p(enable_progress ? paths.size() : 0);
 
-				#pragma omp critical
-				if (progress) {
-					++complete;
-					double percent = complete / path_count;
-					double eta = timer.elapsed() / percent * (1 - percent);
-					cout << "\r" << percent * 100 << "% " << eta << "      " << flush;
-				}
-			}
-		}
-		if (progress) cout << endl;
+		b::for_each(paths, b::bind(&test_runner::run_test, &tester, _1, b::ref(p)));
+
+		if (enable_progress) cout << endl;
 	}
 
 #ifdef _WIN32
