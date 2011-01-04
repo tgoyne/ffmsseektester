@@ -85,7 +85,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 			else
 				paths.push_back(path);
 		}
-		paths.erase(b::remove_if(paths, extension_filter));
+		paths.erase(b::remove_if(paths, extension_filter), paths.end());
 
 		progress p(enable_progress ? paths.size() : 0);
 
