@@ -12,7 +12,7 @@ static bool extension_filter(fs::path path) {
 	if (bad_ext.empty()) {
 		bad_ext += ".ffindex", ".txt", ".exe", ".doc", ".rar", ".zip", ".dll", ".ini", ".zip";
 	}
-	return bad_ext.find(b::to_lower_copy(path.extension().string())) == bad_ext.end();
+	return bad_ext.find(b::to_lower_copy(path.extension().string())) != bad_ext.end();
 }
 
 int _tmain(int argc, _TCHAR *argv[]) {
@@ -85,10 +85,11 @@ int _tmain(int argc, _TCHAR *argv[]) {
 			else
 				paths.push_back(path);
 		}
+		paths.erase(b::remove_if(paths, extension_filter));
 
 		progress p(enable_progress ? paths.size() : 0);
 
-		b::for_each(paths | a::filtered(extension_filter), b::bind(&test_runner::run_test, &tester, _1, b::ref(p)));
+		b::for_each(paths, b::bind(&test_runner::run_test, &tester, _1, b::ref(p)));
 
 		if (enable_progress) cout << endl;
 	}
