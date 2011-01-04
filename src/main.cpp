@@ -21,7 +21,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 		("help", "")
 		("verbose,v", "")
 		("log", po::value<string>()->default_value(""), "")
-		("run-regression-test", "")
+		("run-regression-test", po::value<string>(), "")
 		("spawn-children", "spawn child processes for each test to better handle crashes")
 		("disable-haali", "don't use Haali's splitters even if ffms2 was built with them")
 		("progress", "")
@@ -74,7 +74,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 	FFMS_Init(0, true);
 
 	if (vm.count("run-regression-test")) {
-		tester.run_regression(enable_progress);
+		tester.run_regression(vm["run-regression-test"].as<string>(), enable_progress);
 	}
 	else {
 		vector<fs::path> paths;

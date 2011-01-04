@@ -31,16 +31,22 @@ test_runner::test_runner(bool verbose, bool spawn_children, string log_path, b::
 : log(0)
 , verbose(verbose)
 , spawn_children(spawn_children)
-, log_path(log_path)
 , test_function(test_function)
 {
+	if (log_path == "-") {
+		log = &cout;
+	}
+	else {
+		log_out_file.open(log_path);
+		log = &log_out_file;
+	}
 }
 
 
-void test_runner::run_regression(bool show_progress) {
-	fs::fstream log_file(log_path);
+void test_runner::run_regression(fs::path path, bool show_progress) {
+	fs::fstream log_file(path);
 	if (!log_file.good()) {
-		cerr << "could not open log file " << log_path << endl;
+		cerr << "could not open log file " << path << endl;
 		return;
 	}
 
@@ -62,6 +68,12 @@ void test_runner::run_regression(bool show_progress) {
 string test_runner::check_regression(test_result expected, progress &prog) {
 	test_result actual = test_function(expected.path);
 	++prog;
+
+	{
+		static b::mutex log_mutex;
+		b::lock_guard<b::mutex> lock(log_mutex);
+		(*log) << (string)actual << flush;
+	}
 
 	if (actual == expected) {
 		if (verbose) {
@@ -107,16 +119,5 @@ void test_runner::run_test(fs::path path, progress &prog) {
 
 	static b::mutex log_mutex;
 	b::lock_guard<b::mutex> lock(log_mutex);
-
-	if (!log) {
-		if (log_path == "-") {
-			log = &cout;
-		}
-		else {
-			log_out_file.open(log_path);
-			log = &log_out_file;
-		}
-	}
-
 	(*log) << (string)result << flush;
 }

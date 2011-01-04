@@ -4,14 +4,13 @@ class test_runner {
 
 	bool verbose;
 	bool spawn_children;
-	fs::path log_path;
 	b::function<test_result (fs::path)> test_function;
 
 	string check_regression(test_result file, progress &prog);
 public:
 	test_runner(bool verbose, bool spawn_children, string log_path, b::function<test_result (fs::path)> test_function);
 
-	void run_regression(bool show_progress);
+	void run_regression(fs::path path, bool show_progress);
 	void run_test(fs::path path, progress &prog);
 };
 
