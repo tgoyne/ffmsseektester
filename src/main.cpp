@@ -10,9 +10,9 @@
 static bool extension_filter(fs::path path) {
 	static set<string> bad_ext;
 	if (bad_ext.empty()) {
-		bad_ext += ".ffindex", ".txt", ".exe", ".doc", ".EXE", ".rar", ".zip", ".dll", ".DOC", ".ini", ".zip";
+		bad_ext += ".ffindex", ".txt", ".exe", ".doc", ".rar", ".zip", ".dll", ".ini", ".zip";
 	}
-	return find(bad_ext.begin(), bad_ext.end(), path.extension().string()) == bad_ext.end();
+	return bad_ext.find(b::to_lower_copy(path.extension().string())) == bad_ext.end();
 }
 
 int _tmain(int argc, _TCHAR *argv[]) {
