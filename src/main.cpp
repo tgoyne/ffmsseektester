@@ -78,18 +78,17 @@ int _tmain(int argc, _TCHAR *argv[]) {
 	}
 	else {
 		vector<fs::path> paths;
-		foreach (string path, vm["path"].as<vector<string>>() | a::filtered(extension_filter)) {
+		fs::recursive_directory_iterator end;
+		foreach (string path, vm["path"].as<vector<string>>()) {
 			if (fs::is_directory(path))
-				b::copy(
-				b::make_iterator_range(fs::recursive_directory_iterator(path), fs::recursive_directory_iterator()) | a::filtered(extension_filter),
-				back_inserter(paths));
+				copy(fs::recursive_directory_iterator(path), end, back_inserter(paths));
 			else
 				paths.push_back(path);
 		}
 
 		progress p(enable_progress ? paths.size() : 0);
 
-		b::for_each(paths, b::bind(&test_runner::run_test, &tester, _1, b::ref(p)));
+		b::for_each(paths | a::filtered(extension_filter), b::bind(&test_runner::run_test, &tester, _1, b::ref(p)));
 
 		if (enable_progress) cout << endl;
 	}
