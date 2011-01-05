@@ -63,7 +63,8 @@ int _tmain(int argc, _TCHAR *argv[]) {
 		!!vm.count("verbose"),
 		spawn_children,
 		vm["log"].as<string>(),
-		test_function);
+		test_function,
+		enable_progress);
 
 #ifdef _WIN32
 	if (!spawn_children) SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
@@ -74,7 +75,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 	FFMS_Init(0, true);
 
 	if (vm.count("run-regression-test")) {
-		tester.run_regression(vm["run-regression-test"].as<string>(), enable_progress);
+		tester.run_regression(vm["run-regression-test"].as<string>());
 	}
 	else {
 		vector<fs::path> paths;
@@ -86,10 +87,7 @@ int _tmain(int argc, _TCHAR *argv[]) {
 				paths.push_back(path);
 		}
 		paths.erase(b::remove_if(paths, extension_filter), paths.end());
-
-		progress p(enable_progress ? paths.size() : 0);
-
-		b::for_each(paths, b::bind(&test_runner::run_test, &tester, _1, b::ref(p)));
+		tester.run(paths);
 
 		if (enable_progress) cout << endl;
 	}

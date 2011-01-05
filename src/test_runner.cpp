@@ -27,11 +27,12 @@ test_result test_spawner::operator()(fs::path path) {
 }
 
 
-test_runner::test_runner(bool verbose, bool spawn_children, string log_path, b::function<test_result (fs::path)> test_function)
+test_runner::test_runner(bool verbose, bool spawn_children, string log_path, b::function<test_result (fs::path)> test_function, bool enable_progress)
 : log(0)
 , verbose(verbose)
 , spawn_children(spawn_children)
 , test_function(test_function)
+, enable_progress(enable_progress)
 {
 	if (log_path == "-") {
 		log = &cout;
@@ -43,7 +44,7 @@ test_runner::test_runner(bool verbose, bool spawn_children, string log_path, b::
 }
 
 
-void test_runner::run_regression(fs::path path, bool show_progress) {
+void test_runner::run_regression(fs::path path) {
 	fs::fstream log_file(path);
 	if (!log_file.good()) {
 		cerr << "could not open log file " << path << endl;
@@ -58,7 +59,7 @@ void test_runner::run_regression(fs::path path, bool show_progress) {
 			files.push_back(line);
 	}
 
-	progress prog(show_progress ? files.size() : 0);
+	progress prog(enable_progress ? files.size() : 0);
 	if (spawn_children)
 		ptransform(files, ostream_iterator<string>(cerr), b::protect(b::bind(&test_runner::check_regression, this, _1, b::ref(prog))));
 	else
@@ -67,12 +68,12 @@ void test_runner::run_regression(fs::path path, bool show_progress) {
 
 string test_runner::check_regression(test_result expected, progress &prog) {
 	test_result actual = test_function(expected.path);
-	++prog;
 
 	{
 		static b::mutex log_mutex;
 		b::lock_guard<b::mutex> lock(log_mutex);
 		(*log) << (string)actual << flush;
+		++prog;
 	}
 
 	if (actual == expected) {
@@ -99,12 +100,21 @@ string test_runner::check_regression(test_result expected, progress &prog) {
 	}
 }
 
-void test_runner::run_test(fs::path path, progress &prog) {
+void test_runner::run(vector<fs::path> const& paths) {
+	progress p(enable_progress ? paths.size() : 0);
+
+	if (spawn_children)
+		ptransform(paths, ostream_iterator<string>(*log), b::protect(b::bind(&test_runner::run_test, this, _1, b::ref(p))));
+	else
+		transform(paths, ostream_iterator<string>(*log), b::protect(b::bind(&test_runner::run_test, this, _1, b::ref(p))));
+}
+
+string test_runner::run_test(fs::path path, progress &prog) {
 	if (!fs::exists(path)) {
 		cerr << path << "not found." << endl;
-		return;
+		return "";
 	}
-	if (!fs::is_regular_file(path)) return;
+	if (!fs::is_regular_file(path)) return "";
 
 	if (verbose) cerr << path << ": ";
 	test_result result = test_function(path);
@@ -116,8 +126,5 @@ void test_runner::run_test(fs::path path, progress &prog) {
 	}
 
 	++prog;
-
-	static b::mutex log_mutex;
-	b::lock_guard<b::mutex> lock(log_mutex);
-	(*log) << (string)result << flush;
+	return result;
 }
